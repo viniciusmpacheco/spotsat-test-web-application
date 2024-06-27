@@ -22,5 +22,8 @@ COPY . .
 # Ensure port 3000 is accessible to our system
 EXPOSE 3000
 
+# Build application into /.next
+RUN npm run build
+
 # Run dev, as we would via the command line
-CMD npm run dev
+CMD npm run start
