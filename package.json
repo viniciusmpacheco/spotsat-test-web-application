@@ -1,6 +1,6 @@
 {
-  "name": "spotsat-test-web-application",
-  "version": "0.1.0",
+  "name": "spotsat-web-application",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
