@@ -41,7 +41,6 @@ jobs:
     
   deploy-on-amplify:
     runs-on: ubuntu-latest
-    needs: build-with-docker
     steps:
 
     - name: Infrastructure Repository Checkout
@@ -53,9 +52,15 @@ jobs:
 
     - name: Deploy Application on AWS Amplify
       run: |
+        export AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY}}
+        export AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_KEY}}
+        export AWS_DEFAULT_REGION=us-east-1
+        export TF_VAR_github_access_token=$(aws secretsmanager get-secret-value --secret-id ${{vars.SECRET_MANAGER_ARN}} | jq -r '.SecretString' | jq -r '.GITHUB_ACCESS_TOKEN')
+
         cd modules/application-amplify
         terraform init
-        terraform apply -var aws_access_key=${{secrets.TF_VAR_AWS_ACCESS_KEY}} -var aws_secret_key=${{secrets.TF_VAR_AWS_SECRET_KEY}} -var github_access_token=${{secrets.TF_VAR_GITHUB_ACCESS_TOKEN}} --auto-approve
+        terraform apply --auto-approve
+       
   
   deploy-on-ecs:
     runs-on: ubuntu-latest
@@ -68,19 +73,16 @@ jobs:
         repository: viniciusmpacheco/spotsat-test-infrastructure
         ref: 'develop'
         clean: false
-    
-    - name: ver outputs
-      run: cat $GITHUB_OUTPUT
-
-    - name: ver env vars
-      run: cat $GITHUB_ENV
-    
-    - name: ver vars
-      run: env
 
     - name: Deploy Application on AWS ECS
       run: |
+        export AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY}}
+        export AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_KEY}}
+        export AWS_DEFAULT_REGION=us-east-1
+        export TF_VAR_image_registry_url=${{vars.REGISTRY_URL}}/${{vars.REGISTRY_REPOSITORY}}
+        export TF_VAR_image_name=${{needs.build-with-docker.outputs.IMAGE_NAME}}
+        export TF_VAR_image_version=${{needs.build-with-docker.outputs.IMAGE_VERSION}}
+
         cd modules/application-ecs
         terraform init
-        terraform apply -var image_registry_url=${{vars.REGISTRY_URL}}/${{vars.REGISTRY_REPOSITORY}} -var image_name=${{needs.build-with-docker.outputs.IMAGE_NAME}} -var image_version=${{needs.build-with-docker.outputs.IMAGE_VERSION}} -var aws_access_key=${{secrets.TF_VAR_AWS_ACCESS_KEY}} -var aws_secret_key=${{secrets.TF_VAR_AWS_SECRET_KEY}} --auto-approve
-
+        terraform apply --auto-approve
