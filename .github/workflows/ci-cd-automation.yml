@@ -61,8 +61,7 @@ jobs:
         terraform init
         terraform apply --auto-approve
        
-  
-  deploy-on-ecs:
+  deploy-on-cloudfront:
     runs-on: ubuntu-latest
     needs: build-with-docker
     steps:
@@ -74,7 +73,7 @@ jobs:
         ref: 'develop'
         clean: false
 
-    - name: Deploy Application on AWS ECS
+    - name: Deploy Application on AWS Cloudfront
       run: |
         export AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY}}
         export AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_KEY}}
@@ -83,6 +82,6 @@ jobs:
         export TF_VAR_image_name=${{needs.build-with-docker.outputs.IMAGE_NAME}}
         export TF_VAR_image_version=${{needs.build-with-docker.outputs.IMAGE_VERSION}}
 
-        cd modules/application-ecs
+        cd modules/application-cloudfront
         terraform init
         terraform apply --auto-approve
